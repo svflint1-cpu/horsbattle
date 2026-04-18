@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Horse Arena v4</title>
+  <style>
+    :root{
+      --bg:#120d18;
+      --bg2:#2c1837;
+      --bg3:#4a2750;
+      --panel:rgba(255,255,255,.09);
+      --panel-2:rgba(255,255,255,.13);
+      --stroke:rgba(255,255,255,.10);
+      --text:#fff7f0;
+      --muted:#dbcde3;
+      --gold:#ffd16f;
+      --gold2:#ff9b56;
+      --green:#74eba2;
+      --blue:#83d5ff;
+      --red:#ff8791;
+      --shadow:0 16px 40px rgba(0,0,0,.34);
+      --radius:24px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top, #5d3160 0%, #2a1836 34%, #120d18 78%),
+        linear-gradient(160deg,#0d0a13,#281530);
+      overflow:hidden;
+    }
+    .app{
+      width:min(100vw,460px);
+      height:100vh;
+      margin:0 auto;
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));
+    }
+    .top-glow,.bottom-glow{position:absolute;inset:auto -20% auto -20%;height:220px;filter:blur(40px);pointer-events:none;opacity:.45}
+    .top-glow{top:-110px;background:radial-gradient(circle, rgba(255,195,112,.45), transparent 65%)}
+    .bottom-glow{bottom:-100px;background:radial-gradient(circle, rgba(106,217,255,.25), transparent 60%)}
+    .content{
+      position:absolute; inset:0 0 92px 0; overflow:auto; padding:16px 16px 120px;
+      scrollbar-width:none;
+    }
+    .content::-webkit-scrollbar{display:none}
+    .hero{
+      position:relative;
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,214,126,.15), rgba(255,255,255,.06));
+      border-radius:28px;
+      padding:16px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .hero:before{content:"";position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.28),transparent 68%)}
+    .row{display:flex;gap:12px;align-items:center}
+    .space{justify-content:space-between}
+    .avatar{
+      width:54px;height:54px;border-radius:18px;display:grid;place-items:center;font-size:28px;
+      background:linear-gradient(180deg,#fff0cc,#ffbd72); color:#5a3000; box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .muted{color:var(--muted)}
+    .tiny{font-size:12px}
+    .small{font-size:13px}
+    .big{font-size:26px;font-weight:900;letter-spacing:.2px}
+    .section-title{font-size:18px;font-weight:900;margin:18px 2px 10px}
+    .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .pill{
+      padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid var(--stroke);
+      min-width:96px;
+    }
+    .pill .v{font-size:18px;font-weight:900;margin-top:3px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card{
+      border-radius:24px; border:1px solid var(--stroke); background:var(--panel);
+      box-shadow:var(--shadow); padding:14px; position:relative; overflow:hidden;
+      backdrop-filter: blur(10px);
+    }
+    .card.soft{background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06))}
+    .horse-card{padding:14px 14px 12px;cursor:pointer;transition:.18s transform,.18s border-color}
+    .horse-card:active{transform:scale(.985)}
+    .horse-card.active{border-color:rgba(255,208,113,.65); box-shadow:0 0 0 1px rgba(255,208,113,.35), var(--shadow)}
+    .horse-art{
+      height:126px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:64px;
+      border:1px solid rgba(255,255,255,.08);
+      margin-bottom:10px;
+      position:relative; overflow:hidden;
+    }
+    .horse-art:after{content:""; position:absolute; inset:auto -20% -30% -20%; height:60px; background:radial-gradient(circle, rgba(255,255,255,.22), transparent 65%)}
+    .art-common{background:linear-gradient(180deg,#546275,#2a3342)}
+    .art-rare{background:linear-gradient(180deg,#4f84ff,#284599)}
+    .art-epic{background:linear-gradient(180deg,#aa6bff,#5a2f9c)}
+    .art-legend{background:linear-gradient(180deg,#ffce75,#a75408); color:#4d2400}
+    .rarity-tag{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:rgba(255,255,255,.12)}
+    .progress{height:10px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden}
+    .progress>span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+    .btn, button{
+      border:none; color:var(--text); cursor:pointer; border-radius:18px; padding:13px 14px; font-weight:900;
+      background:linear-gradient(180deg,#ffcb6d,#ff9850); box-shadow: inset 0 1px 0 rgba(255,255,255,.65), 0 8px 18px rgba(255,146,53,.24);
+    }
+    .btn.secondary{background:rgba(255,255,255,.09); box-shadow:none; border:1px solid var(--stroke)}
+    .btn.blue{background:linear-gradient(180deg,#99dbff,#57aeff); color:#0d2840}
+    .btn.green{background:linear-gradient(180deg,#9af1b5,#43cb75); color:#0e3018}
+    .btn.red{background:linear-gradient(180deg,#ffadb5,#ff6f79)}
+    .btn.full{width:100%}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+    .stat{padding:9px;border-radius:16px;background:rgba(255,255,255,.07);font-size:12px}
+    .stat b{display:block;font-size:16px;margin-top:3px}
+    .banner{
+      min-height:150px; display:flex; flex-direction:column; justify-content:space-between;
+      background:linear-gradient(135deg, rgba(119,213,255,.18), rgba(255,209,111,.16));
+    }
+    .banner-track{height:46px;border-radius:16px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;border:1px solid var(--stroke)}
+    .runner,.enemy{position:absolute;top:8px;font-size:24px;transition:left .18s linear}
+    .runner{left:4%}
+    .enemy{left:4%}
+    .finish-line{position:absolute;right:8px;top:0;bottom:0;width:9px;background:repeating-linear-gradient(180deg,#fff 0 8px,#111 8px 16px);border-radius:4px}
+    .chiprow{display:flex;gap:8px;overflow:auto;scrollbar-width:none}
+    .chiprow::-webkit-scrollbar{display:none}
+    .chip{padding:9px 12px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid var(--stroke);white-space:nowrap}
+    .daily{display:flex;gap:10px;align-items:center;padding:12px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid var(--stroke)}
+    .daily.done{opacity:.6}
+    .chest{
+      height:160px; display:grid; place-items:center; position:relative; overflow:hidden;
+      background:linear-gradient(180deg, rgba(255,210,111,.18), rgba(255,255,255,.06));
+    }
+    .chest-box{font-size:78px; transform-origin:center bottom; animation:idle 1.8s ease-in-out infinite}
+    @keyframes idle{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-2deg)}}
+    .open .chest-box{animation:pop .8s ease forwards}
+    @keyframes pop{0%{transform:scale(1)}25%{transform:scale(1.07) rotate(-5deg)}55%{transform:scale(.92) rotate(4deg)}100%{transform:scale(1.02)}}
+    .flash{position:absolute;inset:0;background:radial-gradient(circle, rgba(255,255,255,.85), rgba(255,255,255,0) 60%);opacity:0;pointer-events:none}
+    .open .flash{animation:flash .7s ease}
+    @keyframes flash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+    .nav{
+      position:absolute; left:12px; right:12px; bottom:12px; height:78px;
+      border-radius:26px; border:1px solid var(--stroke); background:rgba(23,16,31,.88); backdrop-filter:blur(18px);
+      display:grid; grid-template-columns:repeat(5,1fr); padding:8px; box-shadow:var(--shadow)
+    }
+    .nav-btn{
+      border:none;background:none;color:var(--muted);font-size:12px;font-weight:800;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px
+    }
+    .nav-btn span{font-size:22px}
+    .nav-btn.active{background:rgba(255,255,255,.08); color:#fff}
+    .screen{display:none}
+    .screen.active{display:block;animation:fade .2s ease}
+    @keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+    .topbar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    .currency{padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid var(--stroke);font-weight:900}
+    .list{display:grid;gap:10px}
+    .match-item,.store-item{padding:12px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid var(--stroke)}
+    .store-price{font-weight:900;font-size:18px;color:var(--gold)}
+    .overlay{position:absolute;inset:0;background:rgba(9,8,13,.66);backdrop-filter:blur(10px);display:none;place-items:center;padding:16px;z-index:20}
+    .overlay.show{display:grid}
+    .modal{width:100%;max-width:420px;border-radius:28px;border:1px solid var(--stroke);background:linear-gradient(180deg,#322041,#1e1527);padding:18px;box-shadow:var(--shadow)}
+    .reveal{ text-align:center; background:linear-gradient(180deg,#5a2f13,#2b1b12)}
+    .reveal-art{height:180px;border-radius:24px;display:grid;place-items:center;font-size:92px;margin:12px 0;background:radial-gradient(circle, rgba(255,255,255,.25), transparent 62%), linear-gradient(180deg,#ffcc71,#cb6b1c);color:#5a2500;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+    .input{width:100%;padding:15px 16px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid var(--stroke);outline:none;color:#fff;font-size:16px}
+    .toast{position:absolute;left:50%;transform:translateX(-50%);bottom:102px;background:rgba(10,10,14,.95);color:white;padding:12px 14px;border-radius:16px;border:1px solid rgba(255,255,255,.12);display:none;z-index:40;max-width:88%;text-align:center}
+    .horse-big{display:grid;grid-template-columns:118px 1fr;gap:12px;align-items:center}
+    .horse-big .horse-art{height:118px;margin-bottom:0}
+    .stars-badge{padding:8px 10px;border-radius:999px;background:linear-gradient(180deg,#e8ddff,#b7a3ff);color:#311f5f;font-weight:900;font-size:12px;display:inline-block}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top-glow"></div>
+    <div class="bottom-glow"></div>
+
+    <div class="content">
+      <section id="screen-home" class="screen active">
+        <div class="hero">
+          <div class="row space">
+            <div class="row">
+              <div class="avatar">🐎</div>
+              <div>
+                <div class="tiny muted">Конюшня игрока</div>
+                <div class="big" id="playerName">Игрок</div>
+                <div class="small muted">Ранг: <span id="rankText">Бронза I</span></div>
+              </div>
+            </div>
+            <div class="stars-badge">Telegram Stars Ready</div>
+          </div>
+          <div class="pillbar">
+            <div class="pill"><div class="tiny muted">Монеты</div><div class="v" id="coins">0</div></div>
+            <div class="pill"><div class="tiny muted">Кристаллы</div><div class="v" id="gems">0</div></div>
+            <div class="pill"><div class="tiny muted">Рейтинг</div><div class="v" id="rating">0</div></div>
+            <div class="pill"><div class="tiny muted">Энергия</div><div class="v" id="energy">0</div></div>
+          </div>
+        </div>
+
+        <div class="section-title">Твоя основная лошадь</div>
+        <div class="card soft" id="mainHorseCard"></div>
+
+        <div class="section-title">Быстрый старт</div>
+        <div class="grid2">
+          <div class="card soft">
+            <div class="tiny muted">Сезонный пропуск</div>
+            <div class="big" id="passLevel">Уровень 1</div>
+            <div class="progress"><span id="passBar" style="width:18%"></span></div>
+            <div class="small muted" id="passText" style="margin-top:8px">18 / 100 XP</div>
+            <div style="margin-top:10px"><button class="btn full" onclick="grantPassXP()">Забрать XP</button></div>
+          </div>
+          <div class="card banner">
+            <div>
+              <div class="tiny muted">PvP гонка</div>
+              <div class="big">Арена</div>
+              <div class="small muted">Короткий забег, буст по таймингу и награда.</div>
+            </div>
+            <button class="btn blue full" onclick="showScreen('arena')">В бой</button>
+          </div>
+        </div>
+
+        <div class="section-title">Ежедневки</div>
+        <div id="dailyList" class="list"></div>
+      </section>
+
+      <section id="screen-stable" class="screen">
+        <div class="topbar">
+          <div class="big" style="font-size:22px">Стойло</div>
+          <div class="currency">Лошадей: <span id="horseCount">0</span></div>
+        </div>
+        <div id="horseGrid" class="grid2"></div>
+      </section>
+
+      <section id="screen-arena" class="screen">
+        <div class="topbar">
+          <div class="big" style="font-size:22px">Арена</div>
+          <div class="currency">Энергия: <span id="arenaEnergy">0</span></div>
+        </div>
+        <div class="card banner">
+          <div class="row space" style="margin-bottom:12px">
+            <div>
+              <div class="tiny muted">Соперник</div>
+              <div style="font-size:20px;font-weight:900" id="enemyName">Shadow Rider</div>
+            </div>
+            <div class="rarity-tag" id="enemyPower">Сила 0</div>
+          </div>
+          <div class="banner-track">
+            <div class="finish-line"></div>
+            <div id="runner" class="runner">🐎</div>
+            <div id="enemy" class="enemy">🐴</div>
+          </div>
+          <div class="row space" style="margin-top:12px">
+            <div class="small muted" id="raceStatus">Нажми старт, чтобы начать короткий PvP-забег.</div>
+            <div class="small" id="boostCount">Бусты: 1</div>
+          </div>
+          <div class="grid2" style="margin-top:12px">
+            <button class="btn full" onclick="startRace()">Старт</button>
+            <button class="btn green full" onclick="boostRace()">Буст</button>
+          </div>
+        </div>
+
+        <div class="section-title">История матчей</div>
+        <div id="matchHistory" class="list"></div>
+      </section>
+
+      <section id="screen-shop" class="screen">
+        <div class="topbar">
+          <div class="big" style="font-size:22px">Магазин</div>
+          <div class="currency">💎 <span id="shopGems">0</span></div>
+        </div>
+        <div class="card chest" id="chestBox">
+          <div class="flash"></div>
+          <div class="chest-box">🎁</div>
+          <div style="position:absolute;left:14px;right:14px;bottom:14px">
+            <button class="btn full" onclick="openChest()">Открыть сундук за 120 💎</button>
+          </div>
+        </div>
+        <div class="section-title">Паки</div>
+        <div id="storeList" class="list"></div>
+      </section>
+
+      <section id="screen-profile" class="screen">
+        <div class="topbar">
+          <div class="big" style="font-size:22px">Профиль</div>
+          <button class="btn secondary" onclick="openRename()">Сменить ник</button>
+        </div>
+        <div class="card soft">
+          <div class="row space">
+            <div>
+              <div class="tiny muted">Игрок</div>
+              <div class="big" style="font-size:24px" id="profileName">Игрок</div>
+              <div class="small muted">Лучшая лошадь: <span id="profileHorse">—</span></div>
+            </div>
+            <div class="avatar">🏆</div>
+          </div>
+          <div class="stats">
+            <div class="stat">Побед<b id="wins">0</b></div>
+            <div class="stat">Поражений<b id="losses">0</b></div>
+            <div class="stat">Сундуков<b id="opened">0</b></div>
+          </div>
+        </div>
+        <div class="section-title">Рейтинг</div>
+        <div class="card soft">
+          <div class="chiprow" id="leaderboard"></div>
+        </div>
+        <div class="section-title">Система</div>
+        <div class="grid2">
+          <button class="btn secondary full" onclick="fakeTelegram()">Проверить WebApp</button>
+          <button class="btn red full" onclick="resetGame()">Сбросить прогресс</button>
+        </div>
+      </section>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-btn active" data-screen="home" onclick="showScreen('home',this)"><span>🏠</span><div>Дом</div></button>
+      <button class="nav-btn" data-screen="stable" onclick="showScreen('stable',this)"><span>🐴</span><div>Стойло</div></button>
+      <button class="nav-btn" data-screen="arena" onclick="showScreen('arena',this)"><span>⚔️</span><div>Арена</div></button>
+      <button class="nav-btn" data-screen="shop" onclick="showScreen('shop',this)"><span>🛒</span><div>Шоп</div></button>
+      <button class="nav-btn" data-screen="profile" onclick="showScreen('profile',this)"><span>👤</span><div>Профиль</div></button>
+    </nav>
+
+    <div id="onboarding" class="overlay">
+      <div class="modal">
+        <div class="tiny muted">Первый запуск</div>
+        <div class="big" style="margin:2px 0 10px">Создай конюшню</div>
+        <div class="small muted" style="margin-bottom:12px">Введи ник, и я дам тебе стартовую лошадь, монеты и первый PvP-билет.</div>
+        <input id="nicknameInput" class="input" maxlength="18" placeholder="Например: Кабан" />
+        <div class="grid2" style="margin-top:14px">
+          <button class="btn secondary full" onclick="fillRandomNick()">Случайный ник</button>
+          <button class="btn full" onclick="completeOnboarding()">Начать</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="renameModal" class="overlay">
+      <div class="modal">
+        <div class="big" style="font-size:24px;margin-bottom:10px">Сменить ник</div>
+        <input id="renameInput" class="input" maxlength="18" placeholder="Новый ник" />
+        <div class="grid2" style="margin-top:14px">
+          <button class="btn secondary full" onclick="closeRename()">Отмена</button>
+          <button class="btn full" onclick="saveRename()">Сохранить</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="revealModal" class="overlay">
+      <div class="modal reveal">
+        <div class="tiny" style="opacity:.8">Новая лошадь</div>
+        <div class="big" id="revealTitle">Рубин</div>
+        <div class="reveal-art" id="revealArt">🐎</div>
+        <div class="rarity-tag" id="revealRarity">Легендарная</div>
+        <div class="small" id="revealDesc" style="margin-top:12px;opacity:.9">Финишер с мощным ускорением на последних секундах трассы.</div>
+        <div style="margin-top:14px"><button class="btn full" onclick="closeReveal()">Забрать</button></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+  </div>
+
+<script>
+const defaultState = {
+  playerName:'',
+  level:1,
+  coins:2200,
+  gems:300,
+  rating:1080,
+  energy:6,
+  wins:0,
+  losses:0,
+  opened:0,
+  passXP:18,
+  activeHorseId:1,
+  dailyClaimed:false,
+  dailyTasks:[
+    {id:1, text:'Сыграть 1 гонку', done:false, reward:{coins:180}},
+    {id:2, text:'Прокачать лошадь', done:false, reward:{coins:220}},
+    {id:3, text:'Открыть сундук', done:false, reward:{gems:20}}
+  ],
+  history:[],
+  horses:[
+    {id:1,name:'Искра',emoji:'🐎',rarity:'Редкая',className:'Спринтер',level:1,speed:72,stamina:58,luck:49,theme:'rare',desc:'Резкий старт и быстрый набор темпа.'},
+    {id:2,name:'Луна',emoji:'🐴',rarity:'Обычная',className:'Марафонец',level:1,speed:56,stamina:76,luck:42,theme:'common',desc:'Держит ровный темп и не сыпется к финишу.'},
+    {id:3,name:'Буря',emoji:'🦄',rarity:'Эпическая',className:'Штормовая',level:1,speed:78,stamina:62,luck:63,theme:'epic',desc:'Любит тайминговые бусты и финишный спурт.'}
+  ]
+};
+
+let state = loadState();
+let raceTimer = null;
+let raceRunning = false;
+let raceBoosts = 1;
+let race = {player:4, enemy:4, t:0};
+
+const leaderboardBase = ['Dusty King','Velvet Hoof','Night Mare','Stable Boss','Ruby Dash','Sugar Sprint'];
+const shopItems = [
+  {id:'starter',title:'Стартовый набор',desc:'Эпическая лошадь + 1200 монет + 70 кристаллов',price:'149 ⭐',action:()=>buyPack('starter')},
+  {id:'vip',title:'VIP на 30 дней',desc:'+ энергия, + бонусы входа, + 50 кристаллов сейчас',price:'229 ⭐',action:()=>buyPack('vip')},
+  {id:'gems',title:'Пак 150 кристаллов',desc:'Быстрый премиум-пак под сундуки и ускорение.',price:'99 ⭐',action:()=>buyPack('gems')},
+  {id:'pass',title:'Battle Pass',desc:'+100 XP пропуска и сезонные плюшки.',price:'179 ⭐',action:()=>buyPack('pass')}
+];
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem('horseArenaV4');
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return structuredClone(defaultState);
+}
+function saveState(){ localStorage.setItem('horseArenaV4', JSON.stringify(state)); }
+function fmt(n){ return Number(n).toLocaleString('ru-RU'); }
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
+  clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.style.display='none',2200);
+}
+function getHorse(id){ return state.horses.find(h=>h.id===id) || state.horses[0]; }
+function getMainHorse(){ return getHorse(state.activeHorseId); }
+function rankName(r){
+  if(r<1100) return 'Бронза I';
+  if(r<1250) return 'Серебро';
+  if(r<1450) return 'Золото';
+  if(r<1700) return 'Платина';
+  return 'Алмаз';
+}
+function themeClass(theme){ return 'art-'+(theme||'common'); }
+function powerOf(h){ return Math.round(h.speed*1.1 + h.stamina + h.luck*.6 + h.level*8); }
+
+function renderMainHorse(){
+  const h=getMainHorse();
+  document.getElementById('mainHorseCard').innerHTML=`
+    <div class="horse-big">
+      <div class="horse-art ${themeClass(h.theme)}">${h.emoji}</div>
+      <div>
+        <div class="row space"><div style="font-size:22px;font-weight:900">${h.name}</div><span class="rarity-tag">${h.rarity}</span></div>
+        <div class="small muted">${h.className} · уровень ${h.level}</div>
+        <div class="small" style="margin-top:6px">${h.desc}</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat">Скорость<b>${h.speed}</b></div>
+      <div class="stat">Выносливость<b>${h.stamina}</b></div>
+      <div class="stat">Удача<b>${h.luck}</b></div>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <button class="btn full" onclick="showScreen('arena')">На арену</button>
+      <button class="btn secondary full" onclick="levelUpHorse(${h.id})">Улучшить за 260</button>
+    </div>`;
+}
+
+function renderDaily(){
+  const wrap=document.getElementById('dailyList');
+  wrap.innerHTML='';
+  if(!state.dailyClaimed){
+    const day=document.createElement('div');
+    day.className='card soft';
+    day.innerHTML=`<div class="row space"><div><div class="tiny muted">Награда за вход</div><div style="font-size:22px;font-weight:900">+350 монет и +15 💎</div></div><button class="btn" onclick="claimDaily()">Забрать</button></div>`;
+    wrap.appendChild(day);
+  }
+  state.dailyTasks.forEach(task=>{
+    const el=document.createElement('div');
+    el.className='daily'+(task.done?' done':'');
+    el.innerHTML=`<div style="font-size:24px">${task.done?'✅':'📌'}</div><div style="flex:1"><div style="font-weight:800">${task.text}</div><div class="tiny muted">Награда: ${task.reward.coins?task.reward.coins+' монет':''} ${task.reward.gems?'+'+task.reward.gems+' 💎':''}</div></div><div>${task.done?'Готово':''}</div>`;
+    wrap.appendChild(el);
+  });
+}
+
+function renderStable(){
+  document.getElementById('horseCount').textContent=state.horses.length;
+  const wrap=document.getElementById('horseGrid');
+  wrap.innerHTML='';
+  state.horses.forEach(h=>{
+    const el=document.createElement('div');
+    el.className='card horse-card'+(state.activeHorseId===h.id?' active':'');
+    el.onclick=()=>selectHorse(h.id);
+    el.innerHTML=`
+      <div class="horse-art ${themeClass(h.theme)}">${h.emoji}</div>
+      <div class="row space"><div style="font-size:20px;font-weight:900">${h.name}</div><span class="rarity-tag">${h.rarity}</span></div>
+      <div class="small muted">${h.className} · ур. ${h.level}</div>
+      <div class="stats">
+        <div class="stat">Скорость<b>${h.speed}</b></div>
+        <div class="stat">Вынос.<b>${h.stamina}</b></div>
+        <div class="stat">Удача<b>${h.luck}</b></div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn secondary full" onclick="event.stopPropagation(); levelUpHorse(${h.id})">Прокачать</button>
+        <button class="btn full" onclick="event.stopPropagation(); selectHorse(${h.id}); showScreen('arena');">Выбрать</button>
+      </div>`;
+    wrap.appendChild(el);
+  });
+}
+
+function renderShop(){
+  document.getElementById('shopGems').textContent=fmt(state.gems);
+  const wrap=document.getElementById('storeList');
+  wrap.innerHTML='';
+  shopItems.forEach(item=>{
+    const el=document.createElement('div');
+    el.className='store-item';
+    el.innerHTML=`<div class="row space"><div><div style="font-size:18px;font-weight:900">${item.title}</div><div class="small muted">${item.desc}</div></div><div style="text-align:right"><div class="store-price">${item.price}</div><button class="btn" style="margin-top:8px" onclick="shopAction('${item.id}')">Купить</button></div></div>`;
+    wrap.appendChild(el);
+  });
+}
+
+function renderProfile(){
+  const main=getMainHorse();
+  document.getElementById('profileName').textContent=state.playerName||'Игрок';
+  document.getElementById('profileHorse').textContent=main.name;
+  document.getElementById('wins').textContent=state.wins;
+  document.getElementById('losses').textContent=state.losses;
+  document.getElementById('opened').textContent=state.opened;
+  const board=document.getElementById('leaderboard');
+  const names=[state.playerName||'Ты', ...leaderboardBase];
+  const scores=[state.rating, 1662,1590,1518,1452,1401,1355].sort((a,b)=>b-a);
+  const merged=[
+    {name: state.playerName||'Ты', score: state.rating},
+    ...leaderboardBase.map((n,i)=>({name:n, score:[1662,1590,1518,1452,1401,1355][i]}))
+  ].sort((a,b)=>b.score-a.score).slice(0,6);
+  board.innerHTML='';
+  merged.forEach((r,i)=>{
+    const el=document.createElement('div'); el.className='chip';
+    el.innerHTML=`#${i+1} <b>${r.name}</b> · ${r.score}`;
+    board.appendChild(el);
+  });
+}
+
+function renderHistory(){
+  const wrap=document.getElementById('matchHistory');
+  wrap.innerHTML='';
+  if(!state.history.length){
+    wrap.innerHTML='<div class="match-item muted">История пока пустая. Сыграй первый забег.</div>';
+    return;
+  }
+  state.history.slice().reverse().forEach(h=>{
+    const el=document.createElement('div');
+    el.className='match-item';
+    el.innerHTML=`<div class="row space"><div><div style="font-weight:900">${h.result==='win'?'Победа':'Поражение'} против ${h.enemy}</div><div class="tiny muted">${h.date}</div></div><div>${h.delta>0?'+':''}${h.delta} рейтинга</div></div>`;
+    wrap.appendChild(el);
+  });
+}
+
+function updateTop(){
+  const h=getMainHorse();
+  document.getElementById('playerName').textContent=state.playerName||'Игрок';
+  document.getElementById('profileName').textContent=state.playerName||'Игрок';
+  document.getElementById('rankText').textContent=rankName(state.rating);
+  document.getElementById('coins').textContent=fmt(state.coins);
+  document.getElementById('gems').textContent=fmt(state.gems);
+  document.getElementById('rating').textContent=fmt(state.rating);
+  document.getElementById('energy').textContent=state.energy;
+  document.getElementById('arenaEnergy').textContent=state.energy;
+  const lvl=Math.floor(state.passXP/100)+1, rest=state.passXP%100;
+  document.getElementById('passLevel').textContent='Уровень '+lvl;
+  document.getElementById('passBar').style.width=rest+'%';
+  document.getElementById('passText').textContent=`${rest} / 100 XP`;
+  document.getElementById('enemyName').textContent=randomEnemyName(h.name);
+  document.getElementById('enemyPower').textContent='Сила '+(powerOf(h)+Math.floor(Math.random()*18-4));
+}
+
+function updateUI(){
+  updateTop();
+  renderMainHorse();
+  renderDaily();
+  renderStable();
+  renderShop();
+  renderProfile();
+  renderHistory();
+  saveState();
+}
+
+function randomEnemyName(exclude){
+  const arr=['Night Spur','Dust Rider','Velvet Hoof','Storm Tail','Black Sugar','Iron Mane'];
+  return arr[Math.floor(Math.random()*arr.length)] + (exclude===arr[0]?' X':'');
+}
+
+function showScreen(name,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const target=btn || document.querySelector(`.nav-btn[data-screen="${name}"]`);
+  if(target) target.classList.add('active');
+}
+
+function selectHorse(id){
+  state.activeHorseId=id;
+  updateUI();
+  toast('Основная лошадь выбрана');
+}
+
+function levelUpHorse(id){
+  const h=getHorse(id);
+  const cost=260 + (h.level-1)*90;
+  if(state.coins<cost){ toast('Не хватает монет'); return; }
+  state.coins-=cost;
+  h.level++;
+  h.speed += 3;
+  h.stamina += 2;
+  h.luck += 2;
+  const task=state.dailyTasks.find(t=>t.id===2 && !t.done);
+  if(task){ task.done=true; state.coins += task.reward.coins; }
+  state.passXP += 14;
+  updateUI();
+  toast(`${h.name} улучшена до ${h.level} уровня`);
+}
+
+function claimDaily(){
+  if(state.dailyClaimed){ toast('Уже забрано'); return; }
+  state.dailyClaimed=true;
+  state.coins+=350; state.gems+=15; state.energy=Math.min(10,state.energy+2); state.passXP += 18;
+  updateUI();
+  toast('Ежедневная награда получена');
+}
+
+function grantPassXP(){ state.passXP += 24; updateUI(); toast('Ты получил XP пропуска'); }
+
+function startRace(){
+  if(raceRunning){ toast('Гонка уже идёт'); return; }
+  if(state.energy<=0){ toast('Нет энергии'); return; }
+  state.energy--;
+  raceRunning=true;
+  raceBoosts=1;
+  race={player:4, enemy:4, t:0};
+  document.getElementById('boostCount').textContent='Бусты: '+raceBoosts;
+  document.getElementById('raceStatus').textContent='Гонка началась. Лови момент для буста.';
+  const playerHorse=getMainHorse();
+  const enemyName=randomEnemyName(playerHorse.name);
+  document.getElementById('enemyName').textContent=enemyName;
+  const enemyPower=Math.max(60,powerOf(playerHorse)+Math.floor(Math.random()*26-12));
+  document.getElementById('enemyPower').textContent='Сила '+enemyPower;
+  setPos();
+  raceTimer=setInterval(()=>{
+    race.t++;
+    race.player += 4 + Math.random()*6 + playerHorse.speed/40 + playerHorse.luck/95;
+    race.enemy += 4 + Math.random()*6 + enemyPower/65;
+    setPos();
+    if(race.player>=92 || race.enemy>=92 || race.t>18){ finishRace(enemyName); }
+  },360);
+  updateUI();
+  const task=state.dailyTasks.find(t=>t.id===1 && !t.done);
+  if(task){ task.done=true; state.coins += task.reward.coins; }
+}
+function setPos(){
+  document.getElementById('runner').style.left=race.player+'%';
+  document.getElementById('enemy').style.left=race.enemy+'%';
+}
+function boostRace(){
+  if(!raceRunning){ toast('Сначала старт'); return; }
+  if(raceBoosts<=0){ toast('Буст уже потрачен'); return; }
+  raceBoosts--;
+  race.player += 13 + Math.random()*7;
+  setPos();
+  document.getElementById('boostCount').textContent='Бусты: '+raceBoosts;
+  document.getElementById('raceStatus').textContent='Хороший буст. Держи темп.';
+}
+function finishRace(enemyName){
+  clearInterval(raceTimer); raceRunning=false;
+  const win = race.player >= race.enemy;
+  let delta= win ? 26+Math.floor(Math.random()*10) : -(14+Math.floor(Math.random()*8));
+  state.rating = Math.max(800, state.rating + delta);
+  if(win){ state.wins++; state.coins += 240; state.gems += 8; state.passXP += 18; }
+  else { state.losses++; state.coins += 90; }
+  state.history.push({result:win?'win':'lose', enemy:enemyName, delta, date:new Date().toLocaleString('ru-RU')});
+  if(state.history.length>10) state.history.shift();
+  document.getElementById('raceStatus').textContent = win ? `Победа! +${delta} рейтинга, +240 монет.` : `Поражение. ${delta} рейтинга, но ты всё равно получил монеты.`;
+  updateUI();
+}
+
+function openChest(){
+  if(state.gems<120){ toast('Нужно 120 кристаллов'); return; }
+  state.gems -= 120;
+  state.opened++;
+  const box=document.getElementById('chestBox'); box.classList.add('open');
+  setTimeout(()=>box.classList.remove('open'), 900);
+  const roll=Math.random();
+  let rewardHorse=null;
+  if(roll>0.55){
+    rewardHorse={id:Date.now(),name:'Рубин',emoji:'🐎',rarity:'Легендарная',className:'Финишер',level:1,speed:84,stamina:66,luck:72,theme:'legend',desc:'Жёсткий финишёр с мощным последним рывком.'};
+  } else if(roll>0.25){
+    rewardHorse={id:Date.now(),name:'Север',emoji:'🐴',rarity:'Редкая',className:'Боевой',level:1,speed:68,stamina:64,luck:58,theme:'rare',desc:'Стабильный PvP-универсал для ранней арены.'};
+  }
+  if(rewardHorse){
+    if(!state.horses.some(h=>h.name===rewardHorse.name)){
+      state.horses.push(rewardHorse);
+      state.activeHorseId = rewardHorse.id;
+      showReveal(rewardHorse);
+    } else {
+      state.coins += rewardHorse.rarity==='Легендарная' ? 900 : 420;
+      toast('Повторка. Получены монеты вместо дубликата.');
+    }
+  } else {
+    state.coins += 700;
+    state.gems += 12;
+    toast('Сундук дал монеты и немного кристаллов');
+  }
+  const task=state.dailyTasks.find(t=>t.id===3 && !t.done);
+  if(task){ task.done=true; state.gems += task.reward.gems; }
+  state.passXP += 22;
+  updateUI();
+}
+
+function showReveal(h){
+  document.getElementById('revealTitle').textContent=h.name;
+  document.getElementById('revealArt').textContent=h.emoji;
+  document.getElementById('revealRarity').textContent=h.rarity+' · '+h.className;
+  document.getElementById('revealDesc').textContent=h.desc;
+  document.getElementById('revealModal').classList.add('show');
+}
+function closeReveal(){ document.getElementById('revealModal').classList.remove('show'); }
+
+function shopAction(id){
+  const item=shopItems.find(i=>i.id===id);
+  if(item) item.action();
+}
+function buyPack(type){
+  if(type==='starter'){
+    state.coins += 1200; state.gems += 70;
+    if(!state.horses.some(h=>h.name==='Комета')) state.horses.push({id:Date.now()+1,name:'Комета',emoji:'🦄',rarity:'Эпическая',className:'Спринтер',level:1,speed:80,stamina:61,luck:69,theme:'epic',desc:'Очень резкая лошадь под стартовые PvP-забеги.'});
+  }
+  if(type==='vip'){ state.gems += 50; state.energy = Math.min(10,state.energy+4); state.coins += 700; }
+  if(type==='gems'){ state.gems += 150; }
+  if(type==='pass'){ state.passXP += 100; state.gems += 20; }
+  updateUI();
+  toast('Покупка-заглушка сработала. Тут потом подключается Telegram Stars.');
+}
+
+function openRename(){ document.getElementById('renameInput').value=state.playerName||''; document.getElementById('renameModal').classList.add('show'); }
+function closeRename(){ document.getElementById('renameModal').classList.remove('show'); }
+function saveRename(){
+  const v=document.getElementById('renameInput').value.trim();
+  if(!v){ toast('Введи ник'); return; }
+  state.playerName=v.slice(0,18); closeRename(); updateUI(); toast('Ник обновлён');
+}
+
+function fillRandomNick(){
+  const names=['KabanHoof','StableBoss','DerbyWolf','GoldMane','TurboRider','NightKopyto'];
+  document.getElementById('nicknameInput').value = names[Math.floor(Math.random()*names.length)];
+}
+function completeOnboarding(){
+  const val=document.getElementById('nicknameInput').value.trim();
+  if(!val){ toast('Нужен ник'); return; }
+  state.playerName = val.slice(0,18);
+  document.getElementById('onboarding').classList.remove('show');
+  updateUI();
+  toast('Конюшня создана');
+}
+
+function fakeTelegram(){
+  const ok = window.Telegram && window.Telegram.WebApp;
+  toast(ok ? 'Telegram WebApp найден' : 'Сейчас открыт обычный браузер. Для Telegram нужен WebApp контейнер.');
+}
+function resetGame(){
+  localStorage.removeItem('horseArenaV4');
+  state = structuredClone(defaultState);
+  updateUI();
+  document.getElementById('onboarding').classList.add('show');
+  toast('Прогресс сброшен');
+  showScreen('home');
+}
+
+updateUI();
+if(!state.playerName){ document.getElementById('onboarding').classList.add('show'); }
+</script>
+</body>
+</html>
